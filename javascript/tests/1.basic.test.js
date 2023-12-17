@@ -2,7 +2,7 @@ const test = require('ava')
 const { parse, PARSE_RESULT } = require('..')
 
 test('parse value', t => {
-    t.deepEqual(parse('null'), JSON.parse('null'))
+    t.deepEqual(parse('null'), null)
     t.deepEqual(parse('true'), true)
     t.deepEqual(parse('false'), false)
 })
