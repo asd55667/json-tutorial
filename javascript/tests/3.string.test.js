@@ -3,7 +3,7 @@ const { parse, PARSE_RESULT } = require('..')
 
 test('parse string', t => {
     t.deepEqual(parse("\"\""), "")
-    t.deepEqual(parse("\"Hello\""), "hello")
+    t.deepEqual(parse("\"Hello\""), "Hello")
     t.deepEqual(parse("\"Hello\\nWorld\""), "Hello\nWorld")
     t.deepEqual(parse("\"\\\" \\\\ \\/ \\b \\f \\n \\r \\t\""), "\" \\ / \b \f \n \r \t")
 })

@@ -61,6 +61,33 @@ function getDigit(ch) {
     return ch.charCodeAt() - '0'.charCodeAt()
 }
 
+function parse_string(str) {
+    if (str.length === 1 || str[str.length - 1] !== "\"") return PARSE_RESULT.MISS_QUOTATION_MARK
+    let string = ""
+    let i = 1
+    while (i < str.length && str[i] !== "\"") {
+        if (str[i] === "\\") {
+            switch (str[i + 1]) {
+                case 'n': string += "\n"; break;
+                case '\\': string += "\\"; break;
+                case '\/': string += "\/"; break;
+                case '\"': string += "\""; break;
+                case 'b': string += "\b"; break;
+                case 'f': string += "\f"; break;
+                case 't': string += "\t"; break;
+                case 'r': string += "\r"; break;
+                default: return PARSE_RESULT.INVALID_STRING_ESCAPE;
+            }
+            i += 2
+        } else if (str[i].charCodeAt() < 0x20) {
+            return PARSE_RESULT.INVALID_STRING_CHAR
+        } else {
+            string += str[i++]
+        }
+    }
+    return string
+}
+
 module.exports = function parse(str) {
     if (!str.trim()) return PARSE_RESULT.EXPECT_VALUE
 
@@ -73,6 +100,7 @@ module.exports = function parse(str) {
         case 'f':
             return parse_primitive(str, 'false', false)
         case '-': return parse_number(str)
+        case "\"": return parse_string(str)
         default:
             if (ch.charCodeAt() >= '0'.charCodeAt() && ch.charCodeAt() <= '9'.charCodeAt())
                 return parse_number(str)
