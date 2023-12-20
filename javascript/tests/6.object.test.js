@@ -26,7 +26,7 @@ test('parse object', t => {
             3: 3
         }
     })
-    t.deepEqual(parse('{"a":{"b":{"c":1}}}'), {
+    t.deepEqual(parse('{\"a\":{\"b\":{\"c\":1}}}'), {
         a: {
             b: {
                 c: 1
