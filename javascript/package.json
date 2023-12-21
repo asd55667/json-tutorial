@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test:unit": "ava tests/3* -w",
-    "test": "ava tests/1* tests/2* tests/3* -w"
+    "test:unit": "ava tests/4* -w",
+    "test": "ava tests/1* tests/2* tests/3* tests/4* -w"
   },
   "keywords": [],
   "author": "",
