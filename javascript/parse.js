@@ -147,7 +147,75 @@ function getCharValue(ch) {
     else return ch.charCodeAt() - 'A'.charCodeAt() + 10
 }
 
-module.exports = function parse(str) {
+function parse_array(str) {
+    let err
+
+    function parse_flat_array(str, idx) {
+        let open = true
+        const arr = []
+        let i = idx
+
+        let start = idx
+        let commaIdx = -1
+
+        function parse_value(i, j) {
+            const substr = str.slice(i, j).trim()
+            if (substr) {
+                const val = parse(substr)
+                if (val in PARSE_RESULT) err = val
+                arr.push(val)
+            }
+        }
+
+        for (let j = idx; j < str.length; j++) {
+            const ch = str[j]
+            if (ch === ']') {
+                if (commaIdx !== -1 && isEmpty(str, commaIdx + 1, j - 1)) err = PARSE_RESULT.INVALID_VALUE
+
+                parse_value(i, j)
+                open = false
+                i = j + 1
+                break
+            } else if (ch === '[') {
+                const [sub, k] = parse_flat_array(str, j + 1)
+                arr.push(sub)
+                j = k
+                i = k + 1
+            } else if (ch === ',') {
+                if (isEmpty(str, start, j - 1) || commaIdx !== -1 && isEmpty(str, commaIdx + 1, j - 1))
+                    err = PARSE_RESULT.INVALID_VALUE
+                commaIdx = j
+
+                parse_value(i, j)
+                i = j + 1
+            }
+        }
+        if (open) err = PARSE_RESULT.MISS_COMMA_OR_SQUARE_BRACKET
+        return [arr, i]
+    }
+
+    const [arr] = parse_flat_array(str, 1)
+    if (err) return err
+    return arr
+}
+
+function isEmpty(str, i, j) {
+    let ch = ''
+    if (typeof i === 'number' && typeof j === 'number') {
+        if (i > j) return true
+        while (i < j && (ch = str[i++])) {
+            if (ch) return false
+        }
+        return true
+    }
+    let k = 0
+    while (ch = str[k++]) {
+        if (ch) return false
+    }
+    return true
+}
+
+function parse(str) {
     if (!str.trim()) return PARSE_RESULT.EXPECT_VALUE
 
     const ch = str[0]
@@ -160,9 +228,12 @@ module.exports = function parse(str) {
             return parse_primitive(str, 'false', false)
         case '-': return parse_number(str)
         case "\"": return parse_string(str)
+        case "[": return parse_array(str)
         default:
             if (ch.charCodeAt() >= '0'.charCodeAt() && ch.charCodeAt() <= '9'.charCodeAt())
                 return parse_number(str)
             return PARSE_RESULT.INVALID_VALUE
     }
 }
+
+module.exports = parse
