@@ -215,8 +215,103 @@ function isEmpty(str, i, j) {
     return true
 }
 
+function parse_object(str) {
+    let err;
+
+    function parse_flat_object(str, idx) {
+        let open = true
+        const obj = {}
+        let i = idx
+        let key = ''
+        let inArray = false
+        let colon = false
+
+        function parse_value(i, j) {
+            const substr = str.slice(i, j).trim()
+            if (substr) {
+                const val = parse(substr)
+                if (val in PARSE_RESULT) err = val
+                obj[key] = val
+                key = ''
+            }
+        }
+
+        for (let j = idx; j < str.length; j++) {
+            const ch = str[j]
+            if (ch === '}') {
+                open = false
+                if (key) parse_value(i, j)
+                break
+            } else if (ch === '{') {
+                const [sub, k] = parse_flat_object(str, j + 1)
+                if (key) {
+                    obj[key] = sub
+                    key = ''
+                }
+                j = k
+                i = k + 1
+            } else if (ch === ':') {
+                // const substr = str.slice(i, j).trim()
+                // if (substr) {
+                //     key = parse(substr)
+                //     if (typeof key !== 'string') {
+                //         err = PARSE_RESULT.MISS_KEY
+                //         break
+                //     }
+                //     i = j + 1
+                // } else {
+                //     err = PARSE_RESULT.MISS_KEY
+                //     break
+                // }
+            } else if (ch === ',') {
+                if (inArray) continue
+                console.assert(typeof key === 'string')
+                parse_value(i, j)
+                i = j + 1
+                let k = i
+                while (k < str.length && [' ', '\n', '\t'].includes(str[k])) k++
+                if (str[k] !== '\"') {
+                    err = PARSE_RESULT.MISS_KEY
+                    break
+                }
+                colon = false
+            } else if (ch === '[') {
+                inArray = true
+            } else if (ch === ']') {
+                inArray = false
+            } else if (ch === '\"') {
+                if (colon) continue
+                let k = j + 1
+                while (k < str.length && str[k] !== '\"') k++;
+                key = parse_string(str.slice(j, k + 1))
+                if (typeof key !== 'string') {
+                    err = PARSE_RESULT.MISS_KEY
+                    break
+                }
+
+                while (k < str.length && str[k] !== ':') k++;
+                if (str[k] !== ':') {
+                    err = PARSE_RESULT.MISS_COLON
+                    break
+                }
+                colon = true
+                j = k
+                i = k + 1
+            }
+        }
+
+        if (open && !err) err = PARSE_RESULT.MISS_COMMA_OR_CURLY_BRACKET
+        return [obj, i]
+    }
+
+    const [obj] = parse_flat_object(str, 1)
+    if (err) return err
+    return obj
+}
+
 function parse(str) {
-    if (!str.trim()) return PARSE_RESULT.EXPECT_VALUE
+    str = str.trim()
+    if (!str) return PARSE_RESULT.EXPECT_VALUE
 
     const ch = str[0]
     switch (ch) {
@@ -229,6 +324,7 @@ function parse(str) {
         case '-': return parse_number(str)
         case "\"": return parse_string(str)
         case "[": return parse_array(str)
+        case "{": return parse_object(str)
         default:
             if (ch.charCodeAt() >= '0'.charCodeAt() && ch.charCodeAt() <= '9'.charCodeAt())
                 return parse_number(str)
