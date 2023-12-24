@@ -3,7 +3,7 @@ const { parse, PARSE_RESULT } = require('..')
 
 test('parse number', t => {
     t.deepEqual(0.0, parse("0"));
-    t.deepEqual(0.0, parse("-0"));
+    t.deepEqual(-0.0, parse("-0"));
     t.deepEqual(0.0, parse("-0.0"));
     t.deepEqual(1.0, parse("1"));
     t.deepEqual(-1.0, parse("-1"));

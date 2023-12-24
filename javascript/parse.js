@@ -8,6 +8,7 @@ function parse_primitive(str, primitive, value) {
 }
 
 function parse_number(str) {
+    if (str === '-0') return -0
     const negative = str[0] === '-'
     if (str[0] === '0' && isDigit(str[1])) return PARSE_RESULT.ROOT_NOT_SINGULAR
 
@@ -170,11 +171,14 @@ function parse_array(str) {
         for (let j = idx; j < str.length; j++) {
             const ch = str[j]
             if (ch === ']') {
-                if (commaIdx !== -1 && isEmpty(str, commaIdx + 1, j - 1)) err = PARSE_RESULT.INVALID_VALUE
+                if (commaIdx !== -1 && isEmpty(str, commaIdx + 1, j)) {
+                    err = PARSE_RESULT.INVALID_VALUE
+                    break
+                }
 
                 parse_value(i, j)
                 open = false
-                i = j + 1
+                i = j
                 break
             } else if (ch === '[') {
                 const [sub, k] = parse_flat_array(str, j + 1)
@@ -182,15 +186,17 @@ function parse_array(str) {
                 j = k
                 i = k + 1
             } else if (ch === ',') {
-                if (isEmpty(str, start, j - 1) || commaIdx !== -1 && isEmpty(str, commaIdx + 1, j - 1))
+                if (isEmpty(str, start, j) || commaIdx !== -1 && isEmpty(str, commaIdx + 1, j)) {
                     err = PARSE_RESULT.INVALID_VALUE
+                    break
+                }
                 commaIdx = j
 
                 parse_value(i, j)
                 i = j + 1
             }
         }
-        if (open) err = PARSE_RESULT.MISS_COMMA_OR_SQUARE_BRACKET
+        if (open && !err) err = PARSE_RESULT.MISS_COMMA_OR_SQUARE_BRACKET
         return [arr, i]
     }
 
